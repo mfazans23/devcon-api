@@ -1,0 +1,6 @@
+{
+  "mongoURI": "mongodb://mfazans23:mfazans23@ac-mrtz9bg-shard-00-00.gugtev5.mongodb.net:27017,ac-mrtz9bg-shard-00-01.gugtev5.mongodb.net:27017,ac-mrtz9bg-shard-00-02.gugtev5.mongodb.net:27017/?ssl=true&replicaSet=atlas-uh0y0l-shard-0&authSource=admin&retryWrites=true&w=majority",
+  "jwtSecret": "mysecrettoken",
+  "githubClientId": "ccd7eda4190b393949d3",
+  "githubSecret": "88298a4b2a3eb318a182a053c0e39fe9e5bc07c6"
+}
