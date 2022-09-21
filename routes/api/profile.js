@@ -3,11 +3,11 @@ const router = express.Router()
 const auth = require('../../middleware/auth')
 const { body, validationResult } = require('express-validator')
 const request = require('request')
-const axios = require('axios')
 const config = require('config')
 
 const Profile = require('../../models/Profile')
 const User = require('../../models/User')
+const Post = require('../../models/Post')
 
 // @route  GET api/profile/me
 // @desc   Get logged in user profile
@@ -64,13 +64,14 @@ router.post(
     // Build profile object
     const profileFields = {}
     profileFields.user = req.user.id
-    if (company) profileFields.company = company
-    if (website) profileFields.website = website
-    if (location) profileFields.location = location
-    if (bio) profileFields.bio = bio
-    if (status) profileFields.status = status
-    if (githubusername) profileFields.githubusername = githubusername
-    if (skills) {
+
+    if (company !== null) profileFields.company = company
+    if (website !== null) profileFields.website = website
+    if (location !== null) profileFields.location = location
+    if (bio !== null) profileFields.bio = bio
+    if (status !== null) profileFields.status = status
+    if (githubusername !== null) profileFields.githubusername = githubusername
+    if (skills !== null) {
       profileFields.skills = skills.split(',').map((skill) => skill.trim())
     }
     // Build social object
@@ -111,7 +112,7 @@ router.post(
 router.get('/', async (req, res) => {
   try {
     const profiles = await Profile.find().populate('user', ['name', 'avatar'])
-    console.log(profiles)
+
     res.json(profiles)
   } catch (err) {
     console.error(err.message)
@@ -147,7 +148,7 @@ router.get('/user/:user_id', async (req, res) => {
 router.delete('/', auth, async (req, res) => {
   try {
     // Delete posts
-
+    await Post.deleteMany({ user: req.user.id })
     // Delete profile
     await Profile.findOneAndRemove({ user: req.user.id })
     // Delete user
@@ -192,7 +193,7 @@ router.put(
 
     try {
       const profile = await Profile.findOne({ user: req.user.id })
-      profile.experiences.unshift(newExp)
+      profile.experience.unshift(newExp)
 
       await profile.save()
 
@@ -210,11 +211,11 @@ router.put(
 router.delete('/experience/:exp_id', auth, async (req, res) => {
   try {
     let profile = await Profile.findOne({ user: req.user.id })
-    const removedIndex = profile.experiences
+    const removedIndex = profile.experience
       .map((item) => item.id)
       .indexOf(req.params.exp_id)
 
-    profile.experiences.splice(removedIndex, 1)
+    profile.experience.splice(removedIndex, 1)
 
     await profile.save()
 
@@ -225,7 +226,7 @@ router.delete('/experience/:exp_id', auth, async (req, res) => {
 })
 
 // @route  PUT api/profile/education
-// @desc   Add profil experience
+// @desc   Add profil education
 // @access Private
 router.put(
   '/education',
@@ -236,9 +237,6 @@ router.put(
       body('degree', 'Degree is required').not().isEmpty(),
       body('fieldOfStudy', 'Field of study is required').not().isEmpty(),
       body('from', 'From date is required').not().isEmpty(),
-      body('to', 'To date is required').not().isEmpty(),
-      body('current', 'Current is required').not().isEmpty(),
-      body('description', 'Description is required').not().isEmpty(),
     ],
   ],
   async (req, res) => {
@@ -315,7 +313,7 @@ router.get('/github/:username', (req, res) => {
       if (response.statusCode !== 200) {
         return res.status(404).json({ msg: 'No github account found' })
       }
-      console.log(JSON.parse(body).length)
+
       res.json(JSON.parse(body))
     })
   } catch (err) {

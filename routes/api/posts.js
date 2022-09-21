@@ -26,6 +26,7 @@ router.post(
         avatar: user.avatar,
         user: req.user.id,
       })
+
       const post = await newPost.save()
 
       res.json(post)
@@ -79,7 +80,7 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(401).json({ msg: 'User not authorized' })
     }
     await post.remove()
-    res.json({ msg: 'Post removed' })
+    res.json(post)
   } catch (err) {
     console.error(err.message)
     if (err.kind === 'ObjectI') {
@@ -94,6 +95,7 @@ router.delete('/:id', auth, async (req, res) => {
 // @access Private
 router.put('/like/:post_id', auth, async (req, res) => {
   try {
+    console.log('its reach')
     const post = await Post.findById(req.params.post_id)
     if (!post) {
       return res.status(404).json({ msg: 'Post not found' })
@@ -111,7 +113,7 @@ router.put('/like/:post_id', auth, async (req, res) => {
 
     await post.save()
 
-    res.json(post.likes)
+    res.json(post.likes[0])
   } catch (err) {
     console.error(err.message)
     if (err.kind === 'ObjectID') {
@@ -131,8 +133,11 @@ router.put('/unlike/:post_id', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Post not found' })
     }
 
-    // Check if the post has already been liked
-    if (!post.likes.find((like) => like.user.toString() === req.user.id)) {
+    // Check if the post has not already been liked
+    if (
+      !post.likes.filter((like) => like.user.toString() === req.user.id)
+        .length > 0
+    ) {
       return res.status(400).json({ msg: 'Post not liked yet' })
     }
 
@@ -145,8 +150,6 @@ router.put('/unlike/:post_id', auth, async (req, res) => {
     await post.save()
 
     res.json(post.likes)
-
-    // res.json(post.likes)
   } catch (err) {
     console.error(err.message)
     if (err.kind === 'ObjectID') {
